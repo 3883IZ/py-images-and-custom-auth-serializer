@@ -134,7 +134,10 @@ class UploadMovieImageView(APIView):
         movie.image.save(new_filename, image, save=True)
 
         return Response(
-            {"message": "Image uploaded successfully", "image": movie.image.url},
+            {
+                "message": "Image uploaded successfully",
+                "image": movie.image.url,
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -190,7 +193,8 @@ class OrderViewSet(
     GenericViewSet,
 ):
     queryset = Order.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
+        "tickets__movie_session__movie",
+        "tickets__movie_session__cinema_hall",
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
