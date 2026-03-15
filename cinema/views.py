@@ -1,11 +1,16 @@
 from datetime import datetime
+import uuid
+import os
 
 from django.db.models import F, Count
-from rest_framework import viewsets, mixins
+from django.utils.text import slugify
+from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
@@ -102,6 +107,36 @@ class MovieViewSet(
             return MovieDetailSerializer
 
         return MovieSerializer
+
+
+class UploadMovieImageView(APIView):
+    """Endpoint for uploading movie images"""
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        try:
+            movie = Movie.objects.get(pk=pk)
+        except Movie.DoesNotExist:
+            return Response(
+                {"error": "Movie not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        image = request.FILES.get("image")
+        if not image:
+            return Response(
+                {"error": "No image provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        filename, ext = os.path.splitext(image.name)
+        new_filename = f"{slugify(movie.title)}-{uuid.uuid4()}{ext}"
+        movie.image.save(new_filename, image, save=True)
+
+        return Response(
+            {"message": "Image uploaded successfully", "image": movie.image.url},
+            status=status.HTTP_200_OK,
+        )
 
 
 class MovieSessionViewSet(viewsets.ModelViewSet):
