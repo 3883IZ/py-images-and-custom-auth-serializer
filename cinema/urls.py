@@ -24,7 +24,7 @@ urlpatterns = [
     path(
         "upload-image/<int:pk>/",
         UploadMovieImageView.as_view(),
-        name="upload-image",
+        name="movie-upload-image",
     ),
 ]
 
